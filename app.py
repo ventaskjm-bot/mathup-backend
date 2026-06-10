@@ -349,6 +349,39 @@ def simulate_payment():
         "code": code
     })
 
+
+# ── OBTENER CÓDIGO POR EMAIL ─────────────────
+@app.route("/code/email/<path:email>", methods=["GET"])
+def get_code_by_email(email):
+    """
+    El frontend llama aquí con el email del comprador.
+    Busca el pago más reciente de ese email y retorna el código.
+    """
+    email = email.lower().strip()
+    db = load_db()
+    
+    # Buscar en pagos por email
+    found_payment = None
+    for payment_id, payment in db["payments"].items():
+        if payment.get("buyer_email", "").lower() == email:
+            if payment["status"] == "approved":
+                # Tomar el más reciente
+                if not found_payment or payment["created_at"] > found_payment["created_at"]:
+                    found_payment = payment
+    
+    if not found_payment:
+        return jsonify({"status": "not_found", "message": "No encontramos un pago con ese email"}), 200
+    
+    code = found_payment.get("code")
+    if not code:
+        return jsonify({"status": "pending", "message": "Pago en proceso"}), 200
+    
+    return jsonify({
+        "status": "found",
+        "code": code,
+        "buyer": found_payment["buyer"]
+    }), 200
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
