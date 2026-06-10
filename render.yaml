@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: mathup-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 4 --bind 0.0.0.0:$PORT --timeout 120
+    envVars:
+      - key: MP_ACCESS_TOKEN
+        sync: false          # Lo ponés vos manualmente en Render
+      - key: MP_WEBHOOK_SECRET
+        sync: false          # Lo ponés vos manualmente en Render
+      - key: ADMIN_KEY
+        sync: false          # Clave para tu panel admin
+      - key: ENABLE_TEST_ENDPOINT
+        value: "false"       # Cambiar a "true" solo para testing
